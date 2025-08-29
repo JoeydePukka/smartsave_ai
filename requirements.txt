@@ -1,6 +1,5 @@
-streamlit
-pandas
-matplotlib
-numpy
-python-dateutil
-altair
+streamlit>=1.25.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+firebase-admin>=6.0.0
+sqlalchemy>=2.0.0
