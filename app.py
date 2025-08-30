@@ -105,8 +105,12 @@ if section == "➕ Add Transaction":
 if section == "📋 Transactions":
     center_header("📋 Transactions", 2)
     if st.session_state.transactions:
+        # Remove 'id' column for a cleaner table
         df = pd.DataFrame(st.session_state.transactions)
         df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
+
+        # Drop the 'id' column before displaying the table
+        df = df.drop(columns=["id"])
 
         # Display the table with responsive layout
         st.dataframe(df.sort_values(by="timestamp", ascending=False), use_container_width=True)
