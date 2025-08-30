@@ -9,7 +9,7 @@ from datetime import datetime
 # =========================
 # Config & tiny helpers
 # =========================
-st.set_page_config(page_title="SmartSave AI", layout="centered")
+st.set_page_config(page_title="Nii's SmartSave AI", layout="centered")
 
 HISTORY_FILE = "transactions.json"
 GOALS_FILE   = "goals.json"
@@ -165,8 +165,8 @@ scroll_to(target_ids[choice])
 # Title
 # =========================
 anchor("home")
-center_header("💰 SmartSave AI — Budget & Savings (Single-Page)", 1)
-st.caption("Track expenses & income, auto-apply monthly recurring items, and set savings goals. Data is saved locally.")
+center_header("💰Nii's SmartSave AI — Budget & Savings (Single-Page)", 1)
+center_header("Track expenses & income, auto-apply monthly recurring items, and set savings goals. Data is saved locally.", 5)
 
 st.markdown("---")
 
@@ -485,3 +485,4 @@ if st.session_state.goals:
                 st.rerun()
 
 st.caption(f"Transactions are saved locally to `{HISTORY_FILE}`. Goals are saved to `{GOALS_FILE}`.")
+
