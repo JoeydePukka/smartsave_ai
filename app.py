@@ -68,29 +68,10 @@ def get_authenticator():
         cookie_expiry_days=30
     )
 
-# First-time admin sign-up
-if not users:
-    st.title("📝 Create Admin Account")
-    with st.form("signup_form"):
-        name_input = st.text_input("Full Name")
-        username_input = st.text_input("Username")
-        password_input = st.text_input("Password", type="password")
-        submit_signup = st.form_submit_button("Create Account")
-        if submit_signup:
-            if not name_input or not username_input or not password_input:
-                st.error("All fields required")
-            else:
-                hashed = stauth.Hasher([password_input]).generate()[0]
-                users.append({"name": name_input, "username": username_input, "password": hashed})
-                save_json(USERS_FILE, users)
-                st.success("Admin account created. Refresh to login.")
-                st.stop()
-
-authenticator = get_authenticator()
-
 # Login or sign-up selection
 option = st.radio("Select Option", ["Login", "Sign Up"], horizontal=True)
 
+# Sign Up section
 if option == "Sign Up":
     st.subheader("📝 Create Account")
     with st.form("user_signup"):
@@ -107,11 +88,13 @@ if option == "Sign Up":
                 hashed = stauth.Hasher([password_input]).generate()[0]
                 users.append({"name": name_input, "username": username_input, "password": hashed})
                 save_json(USERS_FILE, users)
-                st.success("Account created! Switch to Login tab.")
+                st.success("Account created! Now log in.")
                 st.stop()
 
-# Login
+# Login section
+authenticator = get_authenticator()
 name, auth_status, username = authenticator.login("Login", "main")
+
 if auth_status is None:
     st.warning("Enter your credentials")
     st.stop()
@@ -273,24 +256,3 @@ if section == "🎯 Savings Goals":
                 })
                 save_json(GOALS_FILE, st.session_state.goals)
                 st.success("Goal added!")
-
-    if st.session_state.goals:
-        df_all = pd.DataFrame(st.session_state.transactions) if st.session_state.transactions else pd.DataFrame()
-        cur_balance = (df_all[df_all["type"]=="Income"]["amount"].sum() - df_all[df_all["type"]=="Expense"]["amount"].sum()) if not df_all.empty else 0
-        for g in st.session_state.goals:
-            p = max(0.0, min(1.0, cur_balance/g["target"])) if g["target"]>0 else 0.0
-            st.progress(p)
-            cols = st.columns([3,1,1])
-            cols[0].markdown(f"**{g['name']}** — Target ¥{g['target']:.2f} · Progress: {p*100:.1f}%")
-            if cols[1].button("🗑️ Delete", key=f"del_goal_{g['id']}"):
-                st.session_state.goals = [x for x in st.session_state.goals if x["id"]!=g["id"]]
-                save_json(GOALS_FILE, st.session_state.goals)
-                st.success("Goal deleted.")
-                st.experimental_rerun()
-            if cols[2].button("✏️ Rename", key=f"ren_goal_{g['id']}"):
-                new_name = st.text_input(f"Rename '{g['name']}'", key=f"rename_input_{g['id']}")
-                if st.button("Save name", key=f"save_rename_{g['id']}"):
-                    g["name"] = new_name.strip() or g["name"]
-                    save_json(GOALS_FILE, st.session_state.goals)
-                    st.success("Goal renamed.")
-                    st.experimental_rerun()
