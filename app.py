@@ -125,61 +125,34 @@ if "nav_choice" not in st.session_state:
 if apply_recurring(st.session_state.transactions):
     save_transactions(st.session_state.transactions)
 
-# =========================
-# Authentication
-# =========================
-users_data = load_json(USERS_FILE, {})
+import streamlit as st
+import streamlit_authenticator as stauth
 
-names, usernames, passwords = [], [], []
-for uname, info in users_data.items():
-    usernames.append(uname)
-    names.append(info.get("name", uname))
-    passwords.append(info.get("password"))
+# Setup authenticator
+names = ["Your Name"]
+usernames = ["yourusername"]
+passwords = ["yourpassword"]
 
+# Creating the authenticator
 authenticator = stauth.Authenticate(
     names=names,
     usernames=usernames,
     passwords=passwords,
-    cookie_name="smartsave_ai_auth",
-    key="auth",
+    cookie_name="smart_save_cookie",
+    key="some_unique_key",
     cookie_expiry_days=30
 )
 
-if "user" not in st.session_state:
-    st.title("💻 SmartSave AI — Login / Sign Up")
-    choice = st.radio("Choose:", ["Login", "Sign Up"])
-    
-    if choice == "Sign Up":
-        new_name = st.text_input("Full Name")
-        new_username = st.text_input("Username")
-        new_password = st.text_input("Password", type="password")
-        signup_btn = st.button("Sign Up")
-        if signup_btn:
-            if not new_name or not new_username or not new_password:
-                st.error("All fields are required.")
-            elif new_username in users_data:
-                st.error("Username already exists.")
-            else:
-                hashed_pw = stauth.Hasher([new_password]).generate()[0]
-                users_data[new_username] = {"name": new_name, "password": hashed_pw}
-                save_json(USERS_FILE, users_data)
-                st.success("Account created! Please login.")
-                st.experimental_rerun()
-    else:
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        login_btn = st.button("Login")
-        if login_btn:
-            if username in users_data:
-                hashed_pw = users_data[username]["password"]
-                if stauth.Hasher([password]).check_password(hashed_pw):
-                    st.success(f"Welcome back, {users_data[username]['name']}!")
-                    st.session_state["user"] = username
-                    st.experimental_rerun()
-                else:
-                    st.error("Incorrect password.")
-            else:
-                st.error("User not found.")
+# Authentication logic
+name, authentication_status, username = authenticator.login("Login", "main")
+
+if authentication_status:
+    st.write(f"Welcome {name}!")
+elif authentication_status == False:
+    st.error("Username/password is incorrect.")
+elif authentication_status == None:
+    st.warning("Please enter your username and password.")
+
 
 else:
     # =========================
@@ -437,3 +410,4 @@ else:
             st.progress(prog)
     else:
         st.info("No goals set yet. Add a goal above.")
+
