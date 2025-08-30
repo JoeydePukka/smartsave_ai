@@ -11,7 +11,9 @@ from datetime import datetime
 # =========================
 st.set_page_config(page_title="SmartSave AI", layout="wide")
 
-HISTORY_FILE = "transactions.json"  # This file will store transaction data locally
+# Define the storage file for transactions based on a unique user ID
+user_id = str(uuid.uuid4())  # Generate a unique ID for the user
+TRANSACTION_FILE = f"transactions_{user_id}.json"  # Local storage per user
 
 def center_header(text, level=2):
     st.markdown(
@@ -30,6 +32,7 @@ def parse_amount(s: str):
         return None
 
 def load_json(path, default):
+    """Load JSON data from file, or return default if not found"""
     if not os.path.exists(path):
         return default
     try:
@@ -40,6 +43,7 @@ def load_json(path, default):
         return default
 
 def save_json(path, data):
+    """Save JSON data to file"""
     try:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -47,9 +51,9 @@ def save_json(path, data):
         st.error(f"Failed to save {os.path.basename(path)}: {e}")
 
 # =========================
-# Load Local Data
+# Load User Data
 # =========================
-transactions = load_json(HISTORY_FILE, [])
+transactions = load_json(TRANSACTION_FILE, [])
 
 # =========================
 # Session State
@@ -96,7 +100,7 @@ if section == "➕ Add Transaction":
                     "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 st.session_state.transactions.append(record)
-                save_json(HISTORY_FILE, st.session_state.transactions)
+                save_json(TRANSACTION_FILE, st.session_state.transactions)
                 st.success(f"{t_type} ¥{record['amount']:.2f} added under '{record['category']}'")
 
 # =========================
@@ -105,14 +109,11 @@ if section == "➕ Add Transaction":
 if section == "📋 Transactions":
     center_header("📋 Transactions", 2)
     if st.session_state.transactions:
-        # Remove 'id' column for a cleaner table
         df = pd.DataFrame(st.session_state.transactions)
         df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
 
-        # Drop the 'id' column before displaying the table
-        df = df.drop(columns=["id"])
-
-        # Display the table with responsive layout
+        # Display the table with responsive layout, without showing the ID column
+        df = df.drop(columns=["id"])  # Drop 'id' column from the display
         st.dataframe(df.sort_values(by="timestamp", ascending=False), use_container_width=True)
     else:
         st.info("No transactions yet.")
@@ -174,7 +175,7 @@ if st.session_state.get("confirm_clear", False):
     with col1:
         if st.button("Yes, clear history"):
             st.session_state.transactions = []  # Clear session state
-            save_json(HISTORY_FILE, st.session_state.transactions)  # Clear the file
+            save_json(TRANSACTION_FILE, st.session_state.transactions)  # Clear the file
             st.session_state.confirm_clear = False  # Reset confirmation
             st.success("History cleared successfully!")
             st.experimental_rerun()  # Force rerun to update UI
